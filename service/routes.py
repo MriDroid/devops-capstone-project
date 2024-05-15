@@ -62,6 +62,15 @@ def create_accounts():
 ######################################################################
 
 # ... place you code here to LIST accounts ...
+@app.route("/accounts", methods=["GET"])
+def list_all_accounts():
+    """
+    List all Accounts
+    This endpoint will list all Accounts
+    """
+    accounts = Account.all()
+    accounts_list = [acc.serialize() for acc in accounts]
+    return jsonify(accounts_list), status.HTTP_200_OK
 
 
 ######################################################################
@@ -87,14 +96,35 @@ def read_account(id):
 ######################################################################
 
 # ... place you code here to UPDATE an account ...
+@app.route("/accounts/<id>", methods=["PUT"])
+def update_account(id):
+    """
+    Update an Account
+    This endpoint will update an Account based on the posted data
+    """
+    account = Account.find(id)
+    if not account:
+        abort(status.HTTP_404_NOT_FOUND, f"no account founded with id [{id}]")
+    account.deserialize(request.get_json())
+    account.update()
 
+    return account.serialize(), status.HTTP_200_OK
 
 ######################################################################
 # DELETE AN ACCOUNT
 ######################################################################
 
 # ... place you code here to DELETE an account ...
-
+@app.route("/accounts/<id>", methods=["DELETE"])
+def delete_accounts(id):
+    """
+    Delete an Account
+    This endpoint will delete an Account based on the id that is requested
+    """
+    account = Account.find(id)
+    if account:
+        account.delete()
+    return "", status.HTTP_204_NO_CONTENT
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
