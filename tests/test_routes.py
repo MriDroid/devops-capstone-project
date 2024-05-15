@@ -138,5 +138,49 @@ class TestAccountService(TestCase):
 
     def test_account_not_found(self):
         """It should not Read an Account that is not found"""
-        resp = self.client.get(f"{BASE_URL}/0")
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.get(f"{BASE_URL}/0")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_all_accounts(self):
+        """It should return all accounts"""
+        self._create_accounts(4)
+        response = self.client.get(
+            BASE_URL,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        fetchedAccounts = response.get_json()
+        self.assertEqual(len(fetchedAccounts), 4)
+
+    def test_update_account(self):
+        """It should Update an existing Account"""
+        account = self._create_accounts(1)[0]
+        account.name = "New Name"
+        response = self.client.put(
+            f"{BASE_URL}/{account.id}",
+            json=account.serialize()
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        updated_account = response.get_json()
+        self.assertEqual(account.name, updated_account['name'])
+
+    def test_update_account_not_found(self):
+        """It should not Update an Account that is not found"""
+        account = self._create_accounts(1)[0]
+        account.name = "New Name"
+        response = self.client.put(
+            f"{BASE_URL}/0",
+            json=account.serialize()
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_account(self):
+        """It should Delete an Account"""
+        account = self._create_accounts(1)[0]
+        response = self.client.delete(f"{BASE_URL}/{account.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    
+    def test_method_not_allowed(self):
+        """It should not allow an illegal method call"""
+        resp = self.client.delete(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
